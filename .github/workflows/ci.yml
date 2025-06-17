@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build CI
 
 on:
   push:
@@ -21,16 +21,20 @@ jobs:
 
     - name: Check for Warnings
       run: |
-        # Compile with warnings
-        gcc -Wall -Wextra -std=c99 -c basic.c
-        gcc -Wall -Wextra -std=c99 -c shell.c
+        # Compile basic.c and capture output
+        warnings_basic=$(gcc -Wall -Wextra -std=c99 -c basic.c 2>&1)
+        echo "$warnings_basic"
         
-        # Check if warnings were generated
-        if [ -n "$(gcc -Wall -Wextra -std=c99 -c basic.c 2>&1 | grep -i warning)" ] || \
-           [ -n "$(gcc -Wall -Wextra -std=c99 -c shell.c 2>&1 | grep -i warning)" ]; then
+        # Compile shell.c and capture output
+        warnings_shell=$(gcc -Wall -Wextra -std=c99 -c shell.c 2>&1)
+        echo "$warnings_shell"
+        
+        # Check if warnings were generated in either file
+        if echo "$warnings_basic" | grep -i warning > /dev/null || \
+           echo "$warnings_shell" | grep -i warning > /dev/null; then
           echo "⚠️ Compilation warnings detected (non-blocking):"
-          gcc -Wall -Wextra -std=c99 -c basic.c 2>&1 | grep -i warning
-          gcc -Wall -Wextra -std=c99 -c shell.c 2>&1 | grep -i warning
+          echo "$warnings_basic" | grep -i warning
+          echo "$warnings_shell" | grep -i warning
           echo "⚠️ These warnings are informational only and will not block the build."
         else
           echo "✅ No compilation warnings detected"
