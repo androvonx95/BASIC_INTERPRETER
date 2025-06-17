@@ -1,0 +1,37 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Make
+      run: make
+
+    - name: Run Tests
+      run: make test
+
+    - name: Check for Warnings
+      run: |
+        # Compile with warnings
+        gcc -Wall -Wextra -std=c99 -c basic.c
+        gcc -Wall -Wextra -std=c99 -c shell.c
+        
+        # Check if warnings were generated
+        if [ -n "$(gcc -Wall -Wextra -std=c99 -c basic.c 2>&1 | grep -i warning)" ] || \
+           [ -n "$(gcc -Wall -Wextra -std=c99 -c shell.c 2>&1 | grep -i warning)" ]; then
+          echo "⚠️ Compilation warnings detected (non-blocking):"
+          gcc -Wall -Wextra -std=c99 -c basic.c 2>&1 | grep -i warning
+          gcc -Wall -Wextra -std=c99 -c shell.c 2>&1 | grep -i warning
+          echo "⚠️ These warnings are informational only and will not block the build."
+        else
+          echo "✅ No compilation warnings detected"
+        fi
